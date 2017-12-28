@@ -42,12 +42,12 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     {
         try
         {
-//            setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
+            setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
 
             mCamera.setPreviewDisplay(holder);
 
-            mCamera.setDisplayOrientation(90);
-            mFaceView.setDisplayOrientation(90);
+            //            mCamera.setDisplayOrientation(90);
+            //            mFaceView.setDisplayOrientation(90);
 
             Camera.Parameters params = mCamera.getParameters();
             if (params.getSupportedSceneModes().contains(Camera.Parameters.SCENE_MODE_HDR))
@@ -66,7 +66,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
                 params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             }
 
-            if(mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
+            if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
             {
                 mCamera.setParameters(params);
             }
@@ -98,8 +98,10 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     {
     }
 
-    public int doFaceDetection() {
-        if (mFaceDetectionRunning) {
+    public int doFaceDetection()
+    {
+        if (mFaceDetectionRunning)
+        {
             return 0;
         }
        /* // check if face detection is supported or not
@@ -116,8 +118,10 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         return 1;
     }
 
-    public int stopFaceDetection() {
-        if (mFaceDetectionRunning) {
+    public int stopFaceDetection()
+    {
+        if (mFaceDetectionRunning)
+        {
             mCamera.stopFaceDetection();
             mFaceDetectionRunning = false;
             return 1;

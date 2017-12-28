@@ -28,4 +28,35 @@
         android:background="@android:drawable/ic_menu_revert"
         android:padding="20dp"/>
 
+    <ImageButton
+        android:id="@+id/imgCapture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:background="@android:drawable/ic_menu_camera"
+        android:layout_marginBottom="10dp"
+        android:padding="20dp"/>
+
+    <ImageView
+        android:visibility="gone"
+        android:id="@+id/previewImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="50dp"/>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:layout_width="20dp"
+        android:layout_height="20dp"/>
+
+    <FrameLayout
+        android:id="@+id/background"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"/>
+
 </FrameLayout>
