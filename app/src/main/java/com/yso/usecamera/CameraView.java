@@ -4,16 +4,14 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
-import android.view.Display;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.WindowManager;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import static android.content.Context.WINDOW_SERVICE;
 
 @SuppressLint ("ViewConstructor")
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback
@@ -44,9 +42,12 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     {
         try
         {
-            setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
+//            setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
 
             mCamera.setPreviewDisplay(holder);
+
+            mCamera.setDisplayOrientation(90);
+            mFaceView.setDisplayOrientation(90);
 
             Camera.Parameters params = mCamera.getParameters();
             if (params.getSupportedSceneModes().contains(Camera.Parameters.SCENE_MODE_HDR))
@@ -101,12 +102,12 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         if (mFaceDetectionRunning) {
             return 0;
         }
-//        // check if face detection is supported or not
-//        // using Camera.Parameters
-//        if (mCamera.getParameters().getMaxDetectedFaces() <= 0) {
-//            Log.e(TAG, "Face Detection not supported");
-//            return -1;
-//        }
+       /* // check if face detection is supported or not
+        // using Camera.Parameters
+        if (Camera.Parameters.getMaxDetectedFaces() <= 0) {
+            Log.e(TAG, "Face Detection not supported");
+            return -1;
+        }*/
 
         MyFaceDetectionListener fDListener = new MyFaceDetectionListener(mFaceView);
         mCamera.setFaceDetectionListener(fDListener);

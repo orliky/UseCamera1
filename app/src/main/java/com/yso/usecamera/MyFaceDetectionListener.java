@@ -7,10 +7,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Admin on 27-Dec-17.
- */
-
 public class MyFaceDetectionListener implements Camera.FaceDetectionListener
 {
     private static final String TAG = MyFaceDetectionListener.class.getSimpleName();
@@ -26,34 +22,19 @@ public class MyFaceDetectionListener implements Camera.FaceDetectionListener
     @Override
     public void onFaceDetection(Camera.Face[] faces, Camera camera)
     {
-        if (faces.length == 0)
-        {
-            Log.i(TAG, "No faces detected");
-        }
-        else if (faces.length > 0)
-        {
-            Log.i(TAG, "Faces Detected = " + String.valueOf(faces.length));
-
-            List<Rect> faceRects;
-            faceRects = new ArrayList<Rect>();
-
-            for (int i = 0; i < faces.length; i++)
-            {
-                int left = faces[i].rect.left;
-                int right = faces[i].rect.right;
-                int top = faces[i].rect.top;
-                int bottom = faces[i].rect.bottom;
-                Rect rect = new Rect(left, top, right, bottom);
-                faceRects.add(rect);
-            }
-
-            // add function to draw rects on view/surface/canvas
-            setRect(faces, (ArrayList) faceRects);
-        }
+        //        if (faces.length == 0)
+        //        {
+        //            Log.i(TAG, "No faces detected");
+        //        }
+        //        else if (faces.length > 0)
+        //        {
+        Log.i(TAG, "Faces Detected = " + String.valueOf(faces.length));
+        //        }
+        setRect(faces);
     }
 
-    public void setRect(Camera.Face[] faces, ArrayList rects)
+    public void setRect(Camera.Face[] faces)
     {
-        mFaceView.setFaces(faces, rects);
+        mFaceView.setFaces(faces);
     }
 }

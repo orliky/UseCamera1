@@ -51,6 +51,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+
+        mCameraView.surfaceDestroyed(mCameraView.getHolder());
+        mCameraView.getHolder().removeCallback(mCameraView);
+        mCameraView.destroyDrawingCache();
+        mCameraLayout.removeView(mCameraView);
+        mCamera.stopPreview();
+        mCamera.setPreviewCallback(null);
+        mCamera.release();
+    }
+
     private void init()
     {
         try
@@ -106,10 +120,12 @@ public class MainActivity extends AppCompatActivity
                 if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
                 {
                     mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                    mFaceView.setIsFrontCamera(true);
                 }
                 else
                 {
                     mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+                    mFaceView.setIsFrontCamera(false);
                 }
                 mCamera = Camera.open(mCurrentCameraId);
                 mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId, mFaceView);
