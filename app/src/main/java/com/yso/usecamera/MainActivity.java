@@ -25,29 +25,24 @@ import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int MY_STORAGE_REQUEST_CODE = 101;
     int TAKE_PHOTO_CODE = 0;
 
-    private Camera mCamera = null;
     private CameraView mCameraView = null;
     private FrameLayout mCameraLayout;
-    private int mCurrentCameraId;
     private FaceOverlayView mFaceView;
     private String mDir;
     private boolean isInit;
     private ImageView mPreviewImage;
-    private ProgressBar mProgressBar;
-    private FrameLayout background;
     private FrameLayout mGroup;
 
     @Override
@@ -92,163 +87,26 @@ public class MainActivity extends AppCompatActivity
 
     private void init()
     {
-        try
-        {
-            if (mCurrentCameraId == -1)
-            {
-                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
-                mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
-            }
-            else
-            {
-                mCamera = Camera.open(mCurrentCameraId);
-            }
-        } catch (Exception e)
-        {
-            Log.d("ERROR", "Failed to get camera: " + e.getMessage());
-        }
+        isInit = true;
 
-        if (mCamera != null)
-        {
-            isInit = true;
+        mFaceView = FaceOverlayView.getInstance(this);
+        mGroup = findViewById(R.id.group);
+        mGroup.addView(mFaceView);
 
-            mFaceView = FaceOverlayView.getInstance(this);
-//            addContentView(mFaceView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-            mGroup = findViewById(R.id.group);
-            mGroup.addView(mFaceView);
-
-            mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId);//create a SurfaceView to show camera data
-            mCameraLayout = findViewById(R.id.camera_view);
-            mCameraLayout.addView(mCameraView);//add the SurfaceView to the layout
-        }
+        mCameraView = new CameraView(MainActivity.this);//create a SurfaceView to show camera data
+        mCameraLayout = findViewById(R.id.camera_view);
+        mCameraLayout.addView(mCameraView);//add the SurfaceView to the layout
 
         mPreviewImage = findViewById(R.id.previewImage);
-        mProgressBar = findViewById(R.id.progress);
-        background = findViewById(R.id.background);
 
         ImageButton imgClose = findViewById(R.id.imgClose);
-        imgClose.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                finish();
-            }
-        });
+        imgClose.setOnClickListener(this);
 
         ImageButton imgChange = findViewById(R.id.imgChange);
-        imgChange.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
-                {
-                    mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                }
-                else
-                {
-                    mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
-                }
-               mCameraView.changeCamera(mCameraLayout);
-            }
-        });
+        imgChange.setOnClickListener(this);
 
         ImageButton imgCapture = findViewById(R.id.imgCapture);
-        imgCapture.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-               /* background.setVisibility(View.VISIBLE);
-                Handler handler = new Handler();
-                Runnable run = new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        background.setVisibility(View.GONE);
-                    }
-                };
-                handler.postDelayed(run, 200);*/
-                Animation anim = new AlphaAnimation(0.0f, 1.0f);
-                anim.setDuration(1); //You can manage the blinking time with this parameter
-                anim.setStartOffset(10);
-                anim.setRepeatMode(Animation.REVERSE);
-                anim.setRepeatCount(1);
-                mCameraLayout.startAnimation(anim);
-
-//                mProgressBar.setVisibility(View.VISIBLE);
-                mPreviewImage.setVisibility(View.VISIBLE);
-               /* mPreviewImage.setBackgroundResource(R.drawable.anim);
-                AnimationDrawable anim = (AnimationDrawable) mPreviewImage.getBackground();
-                anim.start();*/
-
-                Animation connectingAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.alpha_scale_animation);
-                mPreviewImage.startAnimation(connectingAnimation);
-
-                String file = mDir + System.currentTimeMillis() + ".jpg";
-                final File newfile = new File(file);
-                try
-                {
-                    newfile.createNewFile();
-                } catch (IOException e)
-                {
-                }
-                setRotationParameter(MainActivity.this, mCurrentCameraId, mCamera.getParameters());
-                mCamera.takePicture(null, null, new Camera.PictureCallback()
-                {
-                    @Override
-                    public void onPictureTaken(byte[] data, Camera camera)
-                    {
-                        if (!newfile.exists() && !newfile.mkdirs())
-                        {
-                            mProgressBar.setVisibility(View.GONE);
-                            mPreviewImage.setVisibility(View.GONE);
-                            mPreviewImage.setBackgroundResource(0);
-                            Toast.makeText(MainActivity.this, "Can't create directory to save image.", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        String filename = newfile.getPath();
-                        File pictureFile = new File(filename);
-
-                        try
-                        {
-                            FileOutputStream fos = new FileOutputStream(pictureFile);
-                            fos.write(data);
-                            fos.close();
-
-                            mProgressBar.setVisibility(View.GONE);
-                            mPreviewImage.setBackgroundResource(0);
-                            Bitmap myBitmap = BitmapFactory.decodeFile(newfile.getAbsolutePath());
-                            ExifInterface exif = new ExifInterface(pictureFile.toString());
-                            myBitmap = rotateBitmap(myBitmap, exif);
-                            mPreviewImage.setImageBitmap(myBitmap);
-
-                            Handler handler = new Handler();
-                            Runnable run = new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    mPreviewImage.setVisibility(View.GONE);
-                                    mPreviewImage.setImageBitmap(null);
-                                }
-                            };
-                            handler.postDelayed(run, 2000);
-
-                        } catch (Exception error)
-                        {
-                            mProgressBar.setVisibility(View.GONE);
-                            mPreviewImage.setVisibility(View.GONE);
-                            mPreviewImage.setBackgroundResource(0);
-                            Toast.makeText(MainActivity.this, "Image could not be saved.", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            }
-        });
+        imgCapture.setOnClickListener(this);
     }
 
     @RequiresApi (api = Build.VERSION_CODES.M)
@@ -288,6 +146,79 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void takePic()
+    {
+        Animation anim = new AlphaAnimation(0.0f, 1.0f);
+        anim.setDuration(1);
+        anim.setStartOffset(10);
+        anim.setRepeatMode(Animation.REVERSE);
+        anim.setRepeatCount(1);
+        mCameraLayout.startAnimation(anim);
+
+        mPreviewImage.setVisibility(View.VISIBLE);
+
+        Animation connectingAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.alpha_scale_animation);
+        mPreviewImage.startAnimation(connectingAnimation);
+
+        String file = mDir + System.currentTimeMillis() + ".jpg";
+        final File newfile = new File(file);
+        try
+        {
+            newfile.createNewFile();
+        } catch (IOException e)
+        {
+        }
+        setRotationParameter(MainActivity.this, mCameraView.getCurrentCameraId(), mCameraView.getCamera().getParameters());
+        mCameraView.getCamera().takePicture(null, null, new Camera.PictureCallback()
+        {
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera)
+            {
+                if (!newfile.exists() && !newfile.mkdirs())
+                {
+                    mPreviewImage.setVisibility(View.GONE);
+                    mPreviewImage.setBackgroundResource(0);
+                    Toast.makeText(MainActivity.this, "Can't create directory to save image.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                String filename = newfile.getPath();
+                File pictureFile = new File(filename);
+
+                try
+                {
+                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    fos.write(data);
+                    fos.close();
+
+                    mPreviewImage.setBackgroundResource(0);
+                    Bitmap myBitmap = BitmapFactory.decodeFile(newfile.getAbsolutePath());
+                    ExifInterface exif = new ExifInterface(pictureFile.toString());
+                    myBitmap = rotateBitmap(myBitmap, exif);
+                    mPreviewImage.setImageBitmap(myBitmap);
+
+                    Handler handler = new Handler();
+                    Runnable run = new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            mPreviewImage.setVisibility(View.GONE);
+                            mPreviewImage.setImageBitmap(null);
+                        }
+                    };
+                    handler.postDelayed(run, 2000);
+
+                } catch (Exception error)
+                {
+                    mPreviewImage.setVisibility(View.GONE);
+                    mPreviewImage.setBackgroundResource(0);
+                    Toast.makeText(MainActivity.this, "Image could not be saved.", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
     public void setRotationParameter(Activity activity, int cameraId, Camera.Parameters param)
     {
 
@@ -319,7 +250,7 @@ public class MainActivity extends AppCompatActivity
         rotation = (rotation + 45) / 90 * 90;
         int toRotate = (info.orientation + rotation) % 360;
         param.setRotation(toRotate);
-        mCamera.setParameters(param);
+        mCameraView.getCamera().setParameters(param);
     }
 
     private Bitmap rotateBitmap(Bitmap myBitmap, ExifInterface exif)
@@ -350,9 +281,30 @@ public class MainActivity extends AppCompatActivity
         int h = bitmap.getHeight();
 
         Matrix mtx = new Matrix();
-        //       mtx.postRotate(degree);
+
         mtx.setRotate(degree);
 
         return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true);
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        switch (v.getId())
+        {
+            case R.id.imgClose:
+                finish();
+                break;
+
+            case R.id.imgChange:
+                FlipAnimation flipAnimation = FlipAnimation.create(FlipAnimation.LEFT, true, 400);
+                mCameraView.startAnimation(flipAnimation);
+                mCameraView.changeCamera(mCameraLayout);
+                break;
+
+            case R.id.imgCapture:
+                takePic();
+                break;
+        }
     }
 }

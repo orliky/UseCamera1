@@ -26,26 +26,41 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     private FaceOverlayView mFaceView;
     private Context mContext;
 
-    public CameraView(Context context, Camera camera, int currentCameraId)
+    public CameraView(Context context)
     {
         super(context);
-        this.mCamera = camera;
+
+        try
+        {
+            if (mCurrentCameraId == -1)
+            {
+                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK);
+                mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+            }
+            else
+            {
+                mCamera = Camera.open(mCurrentCameraId);
+            }
+        } catch (Exception e)
+        {
+            Log.d("ERROR", "Failed to get camera: " + e.getMessage());
+        }
+
         this.mSurfaceHolder = this.getHolder();
         this.mSurfaceHolder.addCallback(this);
         this.mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        this.mCurrentCameraId = currentCameraId;
         mFaceView = FaceOverlayView.getInstance(context);
         mContext = context;
     }
 
-    public void reload(Camera camera, int currentCameraId)
+    public Camera getCamera()
     {
-        this.mCamera = camera;
-        this.mSurfaceHolder = this.getHolder();
-        this.mSurfaceHolder.addCallback(this);
-        this.mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        this.mCurrentCameraId = currentCameraId;
-        doFaceDetection();
+        return mCamera;
+    }
+
+    public int getCurrentCameraId()
+    {
+        return mCurrentCameraId;
     }
 
     public void stopCamera(FrameLayout frameLayout)
@@ -60,15 +75,10 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         mCamera.release();
     }
 
-    public void changeCamera(FrameLayout frameLayout)
+    public void changeCamera()
     {
         stopFaceDetection();
-        surfaceDestroyed(getHolder());
-        getHolder().removeCallback(this);
-        destroyDrawingCache();
-        frameLayout.removeView(this);
         mCamera.stopPreview();
-        mCamera.setPreviewCallback(null);
         mCamera.release();
 
         if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
@@ -82,17 +92,18 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             mFaceView.setIsFrontCamera(false);
         }
         mCamera = Camera.open(mCurrentCameraId);
-//        mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId);
-        reload(mCamera, mCurrentCameraId);
-        frameLayout.addView(this);
+
+        setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
         try
         {
+
             mCamera.setPreviewDisplay(getHolder());
         } catch (IOException e)
         {
             e.printStackTrace();
         }
         mCamera.startPreview();
+        doFaceDetection();
     }
 
     @Override
@@ -103,9 +114,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
 
             mCamera.setPreviewDisplay(holder);
-
-            //            mCamera.setDisplayOrientation(90);
-            //            mFaceView.setDisplayOrientation(90);
 
             Camera.Parameters params = mCamera.getParameters();
             if (params.getSupportedSceneModes().contains(Camera.Parameters.SCENE_MODE_HDR))
@@ -213,10 +221,10 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT)
         {
             result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360; // compensate the mirror
+            result = (360 - result) % 360;
         }
         else
-        { // back-facing
+        {
             result = (info.orientation - degrees + 360) % 360;
         }
         camera.setDisplayOrientation(result);

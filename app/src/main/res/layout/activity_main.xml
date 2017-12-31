@@ -6,6 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
     tools:context="com.yso.usecamera.MainActivity">
 
     <FrameLayout
@@ -45,13 +46,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="50dp"/>
-
-    <ProgressBar
-        android:id="@+id/progress"
-        android:visibility="gone"
-        android:layout_gravity="center"
-        android:layout_width="20dp"
-        android:layout_height="20dp"/>
 
     <FrameLayout
         android:id="@+id/background"
