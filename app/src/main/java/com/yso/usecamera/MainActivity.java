@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isInit;
     private ImageView mPreviewImage;
     private FrameLayout mGroup;
+    private View mOpacityFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -97,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCameraLayout = findViewById(R.id.camera_view);
         mCameraLayout.addView(mCameraView);
         mPreviewImage = findViewById(R.id.previewImage);
+        mOpacityFilter = findViewById(R.id.opacityFilter);
 
         ImageButton imgClose = findViewById(R.id.imgClose);
         imgClose.setOnClickListener(this);
@@ -296,7 +300,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imgChange:
                 FlipAnimation flipAnimation = FlipAnimation.create(FlipAnimation.LEFT, true, 400);
                 mCameraView.startAnimation(flipAnimation);
-                mCameraView.changeCamera();
+                flipAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation)
+                    {
+                        mOpacityFilter.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation)
+                    {
+                        mOpacityFilter.setVisibility(View.GONE);
+                        mCameraView.changeCamera();
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation)
+                    {
+
+                    }
+                });
                 break;
 
             case R.id.imgCapture:

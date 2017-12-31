@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import java.io.IOException;
@@ -75,6 +76,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     public void changeCamera()
     {
         stopFaceDetection();
+        surfaceDestroyed(getHolder());
         mCamera.stopPreview();
         mCamera.release();
 
@@ -99,7 +101,9 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             e.printStackTrace();
         }
         mCamera.startPreview();
+        surfaceCreated(getHolder());
         doFaceDetection();
+
     }
 
     @Override
