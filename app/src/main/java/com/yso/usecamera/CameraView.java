@@ -14,12 +14,10 @@ import java.io.IOException;
 import java.util.Objects;
 
 
-@SuppressLint ("ViewConstructor")
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback
 {
     private static final String TAG = CameraView.class.getSimpleName();
 
-    private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
     private int mCurrentCameraId;
     private boolean mFaceDetectionRunning;
@@ -46,9 +44,9 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             Log.d("ERROR", "Failed to get camera: " + e.getMessage());
         }
 
-        this.mSurfaceHolder = this.getHolder();
-        this.mSurfaceHolder.addCallback(this);
-        this.mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        SurfaceHolder surfaceHolder = this.getHolder();
+        surfaceHolder.addCallback(this);
+//        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mFaceView = FaceOverlayView.getInstance(context);
         mContext = context;
     }
@@ -96,7 +94,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         setCameraDisplayOrientation((Activity) mContext, mCurrentCameraId, mCamera);
         try
         {
-
             mCamera.setPreviewDisplay(getHolder());
         } catch (IOException e)
         {
@@ -164,35 +161,31 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     {
     }
 
-    public int doFaceDetection()
+    public void doFaceDetection()
     {
         if (mFaceDetectionRunning)
         {
-            return 0;
+            return;
         }
-       /* // check if face detection is supported or not
-        // using Camera.Parameters
-        if (Camera.Parameters.getMaxDetectedFaces() <= 0) {
+
+        if (mCamera.getParameters().getMaxNumDetectedFaces() <= 0) {
             Log.e(TAG, "Face Detection not supported");
-            return -1;
-        }*/
+            return;
+        }
 
         MyFaceDetectionListener fDListener = new MyFaceDetectionListener(mFaceView);
         mCamera.setFaceDetectionListener(fDListener);
         mCamera.startFaceDetection();
         mFaceDetectionRunning = true;
-        return 1;
     }
 
-    public int stopFaceDetection()
+    public void stopFaceDetection()
     {
         if (mFaceDetectionRunning)
         {
             mCamera.stopFaceDetection();
             mFaceDetectionRunning = false;
-            return 1;
         }
-        return 0;
     }
 
     public void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera)

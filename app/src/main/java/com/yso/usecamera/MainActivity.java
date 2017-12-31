@@ -93,10 +93,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mGroup = findViewById(R.id.group);
         mGroup.addView(mFaceView);
 
-        mCameraView = new CameraView(MainActivity.this);//create a SurfaceView to show camera data
+        mCameraView = new CameraView(MainActivity.this);
         mCameraLayout = findViewById(R.id.camera_view);
-        mCameraLayout.addView(mCameraView);//add the SurfaceView to the layout
-
+        mCameraLayout.addView(mCameraView);
         mPreviewImage = findViewById(R.id.previewImage);
 
         ImageButton imgClose = findViewById(R.id.imgClose);
@@ -167,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             newfile.createNewFile();
         } catch (IOException e)
         {
+            Toast.makeText(MainActivity.this, "Can't create directory to save image.", Toast.LENGTH_LONG).show();
         }
         setRotationParameter(MainActivity.this, mCameraView.getCurrentCameraId(), mCameraView.getCamera().getParameters());
         mCameraView.getCamera().takePicture(null, null, new Camera.PictureCallback()
@@ -221,12 +221,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setRotationParameter(Activity activity, int cameraId, Camera.Parameters param)
     {
-
         android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
         android.hardware.Camera.getCameraInfo(cameraId, info);
 
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-
 
         switch (rotation)
         {
@@ -255,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Bitmap rotateBitmap(Bitmap myBitmap, ExifInterface exif)
     {
-        Log.d("EXIF value", exif.getAttribute(ExifInterface.TAG_ORIENTATION));
         if (exif.getAttribute(ExifInterface.TAG_ORIENTATION).equalsIgnoreCase("6"))
         {
             myBitmap = rotate(myBitmap, 90);
@@ -299,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imgChange:
                 FlipAnimation flipAnimation = FlipAnimation.create(FlipAnimation.LEFT, true, 400);
                 mCameraView.startAnimation(flipAnimation);
-                mCameraView.changeCamera(mCameraLayout);
+                mCameraView.changeCamera();
                 break;
 
             case R.id.imgCapture:

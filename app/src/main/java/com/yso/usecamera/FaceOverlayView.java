@@ -21,7 +21,6 @@ public class FaceOverlayView extends View
     private Paint mMouthEyePaint;
     private Paint mCenterPaint;
     private int mDisplayOrientation;
-    private int mOrientation;
     private Face[] mFaces;
     private boolean isFrontCamera;
     private static FaceOverlayView mInstance = null;
@@ -43,10 +42,7 @@ public class FaceOverlayView extends View
     private void initialize()
     {
         mPaint = new Paint();
-        //        mPaint.setAntiAlias(true);
-        //        mPaint.setDither(true);
         mPaint.setColor(Color.DKGRAY);
-        //        mPaint.setAlpha(128);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(10);
 
@@ -74,29 +70,23 @@ public class FaceOverlayView extends View
         isFrontCamera = frontCamera;
     }
 
-    public void setOrientation(int orientation)
-    {
-        mOrientation = orientation;
-    }
-
     public void setDisplayOrientation(int displayOrientation)
     {
         mDisplayOrientation = displayOrientation;
         invalidate();
     }
 
+    @SuppressLint ("DrawAllocation")
     @Override
     protected void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
         if (mFaces != null)
         {
-            @SuppressLint ("DrawAllocation") Matrix matrix = new Matrix();
+            Matrix matrix = new Matrix();
             prepareMatrix(matrix, isFrontCamera, mDisplayOrientation, getWidth(), getHeight());
             canvas.save();
-            matrix.postRotate(mOrientation);
-            canvas.rotate(-mOrientation);
-            @SuppressLint ("DrawAllocation") RectF rectF = new RectF();
+            RectF rectF = new RectF();
             for (Face face : mFaces)
             {
                 rectF.set(face.rect);
@@ -137,12 +127,8 @@ public class FaceOverlayView extends View
 
     public void prepareMatrix(Matrix matrix, boolean mirror, int displayOrientation, int viewWidth, int viewHeight)
     {
-        // Need mirror for front camera.
         matrix.setScale(mirror ? -1 : 1, 1);
-        // This is the value for android.hardware.Camera.setDisplayOrientation.
         matrix.postRotate(displayOrientation);
-        // Camera driver coordinates range from (-1000, -1000) to (1000, 1000).
-        // UI coordinates range from (0, 0) to (width, height).
         matrix.postScale(viewWidth / 2000f, viewHeight / 2000f);
         matrix.postTranslate(viewWidth / 2f, viewHeight / 2f);
     }
