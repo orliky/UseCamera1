@@ -1,6 +1,5 @@
 package com.yso.usecamera;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;

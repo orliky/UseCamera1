@@ -1,11 +1,7 @@
 package com.yso.usecamera;
 
-import android.graphics.Rect;
 import android.hardware.Camera;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MyFaceDetectionListener implements Camera.FaceDetectionListener
 {
@@ -13,7 +9,7 @@ public class MyFaceDetectionListener implements Camera.FaceDetectionListener
     private FaceOverlayView mFaceView;
 
 
-    public MyFaceDetectionListener(FaceOverlayView faceOverlayView)
+    MyFaceDetectionListener(FaceOverlayView faceOverlayView)
     {
         mFaceView = faceOverlayView;
     }
@@ -25,7 +21,7 @@ public class MyFaceDetectionListener implements Camera.FaceDetectionListener
         setRect(faces);
     }
 
-    public void setRect(Camera.Face[] faces)
+    private void setRect(Camera.Face[] faces)
     {
         mFaceView.setFaces(faces);
     }
