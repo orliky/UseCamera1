@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.hardware.Camera.Face;
 import android.view.View;
@@ -23,6 +24,15 @@ public class FaceOverlayView extends View
     private int mOrientation;
     private Face[] mFaces;
     private boolean isFrontCamera;
+    private static FaceOverlayView mInstance = null;
+
+    public static FaceOverlayView getInstance(Context context) {
+        if (mInstance == null) {
+            mInstance = new FaceOverlayView(context);
+        }
+        return mInstance;
+    }
+
 
     public FaceOverlayView(Context context)
     {
@@ -118,6 +128,10 @@ public class FaceOverlayView extends View
                 }
             }
             canvas.restore();
+        }
+        else
+        {
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         }
     }
 

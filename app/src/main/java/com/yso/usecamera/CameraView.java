@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.FrameLayout;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -25,7 +26,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     private FaceOverlayView mFaceView;
     private Context mContext;
 
-    public CameraView(Context context, Camera camera, int currentCameraId, FaceOverlayView faceOverlayView)
+    public CameraView(Context context, Camera camera, int currentCameraId)
     {
         super(context);
         this.mCamera = camera;
@@ -33,8 +34,65 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         this.mSurfaceHolder.addCallback(this);
         this.mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         this.mCurrentCameraId = currentCameraId;
-        mFaceView = faceOverlayView;
+        mFaceView = FaceOverlayView.getInstance(context);
         mContext = context;
+    }
+
+    public void reload(Camera camera, int currentCameraId)
+    {
+        this.mCamera = camera;
+        this.mSurfaceHolder = this.getHolder();
+        this.mSurfaceHolder.addCallback(this);
+        this.mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        this.mCurrentCameraId = currentCameraId;
+        doFaceDetection();
+    }
+
+    public void stopCamera(FrameLayout frameLayout)
+    {
+        mFaceView.setFaces(null);
+        surfaceDestroyed(getHolder());
+        getHolder().removeCallback(this);
+        destroyDrawingCache();
+        frameLayout.removeView(this);
+        mCamera.stopPreview();
+        mCamera.setPreviewCallback(null);
+        mCamera.release();
+    }
+
+    public void changeCamera(FrameLayout frameLayout)
+    {
+        stopFaceDetection();
+        surfaceDestroyed(getHolder());
+        getHolder().removeCallback(this);
+        destroyDrawingCache();
+        frameLayout.removeView(this);
+        mCamera.stopPreview();
+        mCamera.setPreviewCallback(null);
+        mCamera.release();
+
+        if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
+        {
+            mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+            mFaceView.setIsFrontCamera(true);
+        }
+        else
+        {
+            mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+            mFaceView.setIsFrontCamera(false);
+        }
+        mCamera = Camera.open(mCurrentCameraId);
+//        mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId);
+        reload(mCamera, mCurrentCameraId);
+        frameLayout.addView(this);
+        try
+        {
+            mCamera.setPreviewDisplay(getHolder());
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        mCamera.startPreview();
     }
 
     @Override
@@ -127,11 +185,6 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             return 1;
         }
         return 0;
-    }
-
-    public void setCurrentCameraId(int currentCameraId)
-    {
-        mCurrentCameraId = currentCameraId;
     }
 
     public void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera)

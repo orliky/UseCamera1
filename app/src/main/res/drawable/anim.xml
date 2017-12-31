@@ -4,10 +4,4 @@
     <item android:drawable="@android:drawable/ic_delete" android:duration="100" />
     <item android:drawable="@android:drawable/ic_menu_camera" android:duration="100" />
     <item android:drawable="@android:drawable/ic_dialog_dialer" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_delete" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_menu_camera" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_dialog_dialer" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_delete" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_menu_camera" android:duration="100" />
-    <item android:drawable="@android:drawable/ic_dialog_dialer" android:duration="100" />
 </animation-list>

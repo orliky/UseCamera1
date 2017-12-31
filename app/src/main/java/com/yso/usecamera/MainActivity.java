@@ -2,28 +2,24 @@ package com.yso.usecamera;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.drawable.AnimationDrawable;
 import android.hardware.Camera;
 import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
@@ -33,11 +29,8 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import static android.support.v4.content.FileProvider.getUriForFile;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -55,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     private ImageView mPreviewImage;
     private ProgressBar mProgressBar;
     private FrameLayout background;
+    private FrameLayout mGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -91,13 +85,8 @@ public class MainActivity extends AppCompatActivity
 
         if (isInit)
         {
-            mCameraView.surfaceDestroyed(mCameraView.getHolder());
-            mCameraView.getHolder().removeCallback(mCameraView);
-            mCameraView.destroyDrawingCache();
-            mCameraLayout.removeView(mCameraView);
-            mCamera.stopPreview();
-            mCamera.setPreviewCallback(null);
-            mCamera.release();
+            mGroup.removeView(mFaceView);
+            mCameraView.stopCamera(mCameraLayout);
         }
     }
 
@@ -123,10 +112,12 @@ public class MainActivity extends AppCompatActivity
         {
             isInit = true;
 
-            mFaceView = new FaceOverlayView(this);
-            addContentView(mFaceView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+            mFaceView = FaceOverlayView.getInstance(this);
+//            addContentView(mFaceView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+            mGroup = findViewById(R.id.group);
+            mGroup.addView(mFaceView);
 
-            mCameraView = new CameraView(this, mCamera, mCurrentCameraId, mFaceView);//create a SurfaceView to show camera data
+            mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId);//create a SurfaceView to show camera data
             mCameraLayout = findViewById(R.id.camera_view);
             mCameraLayout.addView(mCameraView);//add the SurfaceView to the layout
         }
@@ -151,36 +142,15 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                mCameraView.surfaceDestroyed(mCameraView.getHolder());
-                mCameraView.getHolder().removeCallback(mCameraView);
-                mCameraView.destroyDrawingCache();
-                mCameraLayout.removeView(mCameraView);
-                mCamera.stopPreview();
-                mCamera.setPreviewCallback(null);
-                mCamera.release();
-
                 if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
                 {
                     mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                    mFaceView.setIsFrontCamera(true);
                 }
                 else
                 {
                     mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
-                    mFaceView.setIsFrontCamera(false);
                 }
-                mCamera = Camera.open(mCurrentCameraId);
-                mCameraView = new CameraView(MainActivity.this, mCamera, mCurrentCameraId, mFaceView);
-                mCameraLayout.addView(mCameraView);
-                try
-                {
-                    mCamera.setPreviewDisplay(mCameraView.getHolder());
-                } catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-                mCamera.startPreview();
-                mCameraView.setCurrentCameraId(mCurrentCameraId);
+               mCameraView.changeCamera(mCameraLayout);
             }
         });
 
@@ -190,7 +160,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                background.setVisibility(View.VISIBLE);
+               /* background.setVisibility(View.VISIBLE);
                 Handler handler = new Handler();
                 Runnable run = new Runnable()
                 {
@@ -200,7 +170,13 @@ public class MainActivity extends AppCompatActivity
                         background.setVisibility(View.GONE);
                     }
                 };
-                handler.postDelayed(run, 200);
+                handler.postDelayed(run, 200);*/
+                Animation anim = new AlphaAnimation(0.0f, 1.0f);
+                anim.setDuration(1); //You can manage the blinking time with this parameter
+                anim.setStartOffset(10);
+                anim.setRepeatMode(Animation.REVERSE);
+                anim.setRepeatCount(1);
+                mCameraLayout.startAnimation(anim);
 
 //                mProgressBar.setVisibility(View.VISIBLE);
                 mPreviewImage.setVisibility(View.VISIBLE);
