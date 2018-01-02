@@ -122,47 +122,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mPreviewImage = findViewById(R.id.previewImage);
         mPreviewSmallImage = findViewById(R.id.previewSmallImage);
         mPreviewSmallImage.setEnabled(false);
-        mPreviewSmallImage.setOnClickListener(new View.OnClickListener() {
+        mPreviewSmallImage.setOnClickListener(new View.OnClickListener()
+        {
             @Override
             public void onClick(View v)
             {
-                final Dialog nagDialog = new Dialog(MainActivity.this, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
-                nagDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                nagDialog.setContentView(R.layout.preview_image);
-                ImageView ivPreview = nagDialog.findViewById(R.id.iv_preview_image);
-                ImageView closePreview = nagDialog.findViewById(R.id.close_preview);
-                closePreview.setOnClickListener(new View.OnClickListener()
-                {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        nagDialog.dismiss();
-                    }
-                });
-                ivPreview.setImageBitmap(mLastPic);
-                nagDialog.getWindow().setBackgroundDrawable(null);
-                nagDialog.show();
-
-                FaceDetector detector = new FaceDetector.Builder(MainActivity.this)
-                        .setTrackingEnabled(false)
-                        .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                        .build();
-                Frame frame = new Frame.Builder().setBitmap(mLastPic).build();
-                SparseArray<Face> faces = detector.detect(frame);
-                for (int i = 0; i < faces.size(); ++i) {
-                    com.google.android.gms.vision.face.Face face = faces.valueAt(i);
-                    for (Landmark landmark : face.getLandmarks()) {
-                        int cx = (int) (landmark.getPosition().x);
-                        int cy = (int) (landmark.getPosition().y);
-                        Canvas canvas = new Canvas(mLastPic);
-                        Paint p = new Paint();
-                        p.setColor(Color.GREEN);
-                        p.setStyle(Paint.Style.STROKE);
-                        p.setStrokeWidth(10);
-                        canvas.drawCircle(cx, cy, 10, p);
-                        mPreviewSmallImage.draw(canvas);
-                    }
-                }
+                openImage();
             }
         });
         mOpacityFilter = findViewById(R.id.opacityFilter);
@@ -175,6 +140,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ImageButton imgCapture = findViewById(R.id.imgCapture);
         imgCapture.setOnClickListener(this);
+    }
+
+    private void openImage()
+    {
+        final Dialog nagDialog = new Dialog(MainActivity.this, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
+        nagDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        nagDialog.setContentView(R.layout.preview_image);
+        ImageView ivPreview = nagDialog.findViewById(R.id.iv_preview_image);
+        ImageView closePreview = nagDialog.findViewById(R.id.close_preview);
+        closePreview.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                nagDialog.dismiss();
+            }
+        });
+        ivPreview.setImageBitmap(mLastPic);
+        nagDialog.getWindow().setBackgroundDrawable(null);
+        nagDialog.show();
+
+        addFaceDetector();
+    }
+
+    private void addFaceDetector()
+    {
+        FaceDetector detector = new FaceDetector.Builder(MainActivity.this).setTrackingEnabled(false).setLandmarkType(FaceDetector.ALL_LANDMARKS).build();
+        Frame frame = new Frame.Builder().setBitmap(mLastPic).build();
+        SparseArray<Face> faces = detector.detect(frame);
+        for (int i = 0; i < faces.size(); ++i)
+        {
+            com.google.android.gms.vision.face.Face face = faces.valueAt(i);
+            for (Landmark landmark : face.getLandmarks())
+            {
+                int cx = (int) (landmark.getPosition().x);
+                int cy = (int) (landmark.getPosition().y);
+                Canvas canvas = new Canvas(mLastPic);
+                Paint p = new Paint();
+                p.setColor(Color.GREEN);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeWidth(10);
+                canvas.drawCircle(cx, cy, 15, p);
+                mPreviewSmallImage.draw(canvas);
+            }
+        }
     }
 
     @RequiresApi (api = Build.VERSION_CODES.M)
@@ -223,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         anim.setRepeatMode(Animation.REVERSE);
         anim.setRepeatCount(1);
         mCameraLayout.startAnimation(anim);
-///////////////////////////
+        ///////////////////////////
         //create image file
         String file = mDir + System.currentTimeMillis() + ".jpg";
         final File newfile = new File(file);
@@ -379,7 +389,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imgChange:
                 FlipAnimation flipAnimation = FlipAnimation.create(FlipAnimation.LEFT, true, 400);
                 mCameraView.startAnimation(flipAnimation);
-                flipAnimation.setAnimationListener(new Animation.AnimationListener() {
+                flipAnimation.setAnimationListener(new Animation.AnimationListener()
+                {
                     @Override
                     public void onAnimationStart(Animation animation)
                     {
