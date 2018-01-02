@@ -1,4 +1,4 @@
-package com.yso.usecamera;
+package com.yso.usecamera.views;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,8 +7,10 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.widget.FrameLayout;
+
+import com.yso.usecamera.listeners.MyFaceDetectionListener;
+import com.yso.usecamera.managers.SharedPref;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -28,6 +30,8 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
     {
         super(context);
 
+        mCurrentCameraId = SharedPref.read(SharedPref.CAMERA_ID, -1);
+
         try
         {
             if (mCurrentCameraId == -1)
@@ -43,11 +47,11 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         {
             Log.d("ERROR", "Failed to get camera: " + e.getMessage());
         }
-
         SurfaceHolder surfaceHolder = this.getHolder();
         surfaceHolder.addCallback(this);
-//        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        //        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mFaceView = FaceOverlayView.getInstance(context);
+        mFaceView.setIsFrontCamera(mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT);
         mContext = context;
     }
 
@@ -83,11 +87,13 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
         if (mCurrentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
         {
             mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+            SharedPref.write(SharedPref.CAMERA_ID, mCurrentCameraId);
             mFaceView.setIsFrontCamera(true);
         }
         else
         {
             mCurrentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
+            SharedPref.write(SharedPref.CAMERA_ID, mCurrentCameraId);
             mFaceView.setIsFrontCamera(false);
         }
         mCamera = Camera.open(mCurrentCameraId);
@@ -176,7 +182,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback
             return;
         }
 
-        MyFaceDetectionListener fDListener = new MyFaceDetectionListener(mFaceView);
+        MyFaceDetectionListener fDListener = new MyFaceDetectionListener(mContext);
         mCamera.setFaceDetectionListener(fDListener);
         mCamera.startFaceDetection();
         mFaceDetectionRunning = true;

@@ -56,6 +56,13 @@
         android:layout_gravity="center"
         android:layout_margin="50dp"/>
 
+    <ImageView
+        android:id="@+id/previewSmallImage"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="10dp"/>
+
     <FrameLayout
         android:id="@+id/background"
         android:visibility="gone"

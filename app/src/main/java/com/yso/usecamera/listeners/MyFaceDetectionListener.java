@@ -1,17 +1,20 @@
-package com.yso.usecamera;
+package com.yso.usecamera.listeners;
 
+import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
+
+import com.yso.usecamera.views.FaceOverlayView;
 
 public class MyFaceDetectionListener implements Camera.FaceDetectionListener
 {
     private static final String TAG = MyFaceDetectionListener.class.getSimpleName();
-    private FaceOverlayView mFaceView;
 
+    private Context mContext;
 
-    MyFaceDetectionListener(FaceOverlayView faceOverlayView)
+    public MyFaceDetectionListener(Context context)
     {
-        mFaceView = faceOverlayView;
+        mContext = context;
     }
 
     @Override
@@ -23,6 +26,6 @@ public class MyFaceDetectionListener implements Camera.FaceDetectionListener
 
     private void setRect(Camera.Face[] faces)
     {
-        mFaceView.setFaces(faces);
+        FaceOverlayView.getInstance(mContext).setFaces(faces);
     }
 }

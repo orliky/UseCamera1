@@ -1,4 +1,4 @@
-package com.yso.usecamera;
+package com.yso.usecamera.views;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -25,8 +25,10 @@ public class FaceOverlayView extends View
     private boolean isFrontCamera;
     private static FaceOverlayView mInstance = null;
 
-    public static FaceOverlayView getInstance(Context context) {
-        if (mInstance == null) {
+    public static FaceOverlayView getInstance(Context context)
+    {
+        if (mInstance == null)
+        {
             mInstance = new FaceOverlayView(context);
         }
         return mInstance;
@@ -78,7 +80,7 @@ public class FaceOverlayView extends View
 
     @SuppressLint ("DrawAllocation")
     @Override
-    protected void onDraw(Canvas canvas)
+    public void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
         if (mFaces != null)

@@ -2,11 +2,15 @@ package com.yso.usecamera;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.os.Build;
@@ -17,8 +21,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Surface;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -28,10 +34,18 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.Landmark;
+import com.yso.usecamera.managers.SharedPref;
+import com.yso.usecamera.utils.FlipAnimation;
+import com.yso.usecamera.views.CameraView;
+import com.yso.usecamera.views.FaceOverlayView;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
@@ -45,8 +59,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String mDir;
     private boolean isInit;
     private ImageView mPreviewImage;
+    private ImageView mPreviewSmallImage;
     private FrameLayout mGroup;
     private View mOpacityFilter;
+    private Bitmap mLastPic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -54,9 +70,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         mDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/UseCamera/";
         File newdir = new File(mDir);
         newdir.mkdirs();
+
+        SharedPref.init(getApplicationContext());
     }
 
     @RequiresApi (api = Build.VERSION_CODES.M)
@@ -100,6 +120,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCameraLayout = findViewById(R.id.camera_view);
         mCameraLayout.addView(mCameraView);
         mPreviewImage = findViewById(R.id.previewImage);
+        mPreviewSmallImage = findViewById(R.id.previewSmallImage);
+        mPreviewSmallImage.setEnabled(false);
+        mPreviewSmallImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                final Dialog nagDialog = new Dialog(MainActivity.this, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
+                nagDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                nagDialog.setContentView(R.layout.preview_image);
+                ImageView ivPreview = nagDialog.findViewById(R.id.iv_preview_image);
+                ImageView closePreview = nagDialog.findViewById(R.id.close_preview);
+                closePreview.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        nagDialog.dismiss();
+                    }
+                });
+                ivPreview.setImageBitmap(mLastPic);
+                nagDialog.getWindow().setBackgroundDrawable(null);
+                nagDialog.show();
+
+                FaceDetector detector = new FaceDetector.Builder(MainActivity.this)
+                        .setTrackingEnabled(false)
+                        .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                        .build();
+                Frame frame = new Frame.Builder().setBitmap(mLastPic).build();
+                SparseArray<Face> faces = detector.detect(frame);
+                for (int i = 0; i < faces.size(); ++i) {
+                    com.google.android.gms.vision.face.Face face = faces.valueAt(i);
+                    for (Landmark landmark : face.getLandmarks()) {
+                        int cx = (int) (landmark.getPosition().x);
+                        int cy = (int) (landmark.getPosition().y);
+                        Canvas canvas = new Canvas(mLastPic);
+                        Paint p = new Paint();
+                        p.setColor(Color.GREEN);
+                        p.setStyle(Paint.Style.STROKE);
+                        p.setStrokeWidth(10);
+                        canvas.drawCircle(cx, cy, 10, p);
+                        mPreviewSmallImage.draw(canvas);
+                    }
+                }
+            }
+        });
         mOpacityFilter = findViewById(R.id.opacityFilter);
 
         ImageButton imgClose = findViewById(R.id.imgClose);
@@ -151,18 +216,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void takePic()
     {
+        // flicker animation
         Animation anim = new AlphaAnimation(0.0f, 1.0f);
         anim.setDuration(1);
         anim.setStartOffset(10);
         anim.setRepeatMode(Animation.REVERSE);
         anim.setRepeatCount(1);
         mCameraLayout.startAnimation(anim);
-
-        mPreviewImage.setVisibility(View.VISIBLE);
-
-        Animation connectingAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.alpha_scale_animation);
-        mPreviewImage.startAnimation(connectingAnimation);
-
+///////////////////////////
+        //create image file
         String file = mDir + System.currentTimeMillis() + ".jpg";
         final File newfile = new File(file);
         try
@@ -172,8 +234,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             Toast.makeText(MainActivity.this, "Can't create directory to save image.", Toast.LENGTH_LONG).show();
         }
+        //rotate camera
         setRotationParameter(MainActivity.this, mCameraView.getCurrentCameraId(), mCameraView.getCamera().getParameters());
-        mCameraView.getCamera().takePicture(null, null, new Camera.PictureCallback()
+        //take the pic
+        mCameraView.getCamera().takePicture(null, null, getPictureCallback(newfile));
+    }
+
+    @NonNull
+    private Camera.PictureCallback getPictureCallback(final File newfile)
+    {
+        return new Camera.PictureCallback()
         {
             @Override
             public void onPictureTaken(byte[] data, Camera camera)
@@ -196,10 +266,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     fos.close();
 
                     mPreviewImage.setBackgroundResource(0);
+                    //rotate pic in gallery
                     Bitmap myBitmap = BitmapFactory.decodeFile(newfile.getAbsolutePath());
                     ExifInterface exif = new ExifInterface(pictureFile.toString());
                     myBitmap = rotateBitmap(myBitmap, exif);
+
                     mPreviewImage.setImageBitmap(myBitmap);
+                    mPreviewSmallImage.setImageBitmap(myBitmap);
+                    mPreviewSmallImage.setEnabled(true);
+                    mLastPic = myBitmap;
+                    //preview animation
+                    mPreviewImage.setVisibility(View.VISIBLE);
+                    Animation connectingAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.alpha_scale_animation);
+                    mPreviewImage.startAnimation(connectingAnimation);
 
                     Handler handler = new Handler();
                     Runnable run = new Runnable()
@@ -220,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(MainActivity.this, "Image could not be saved.", Toast.LENGTH_LONG).show();
                 }
             }
-        });
+        };
     }
 
     public void setRotationParameter(Activity activity, int cameraId, Camera.Parameters param)

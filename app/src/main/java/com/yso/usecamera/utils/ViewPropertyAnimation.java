@@ -1,4 +1,4 @@
-package com.yso.usecamera;
+package com.yso.usecamera.utils;
 
 import android.graphics.Camera;
 import android.graphics.Matrix;
@@ -8,10 +8,11 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
 
-public class ViewPropertyAnimation extends Animation {
+public class ViewPropertyAnimation extends Animation
+{
 
     private final Camera mCamera = new Camera();
-    protected int mWidth  = 0;
+    protected int mWidth = 0;
     protected int mHeight = 0;
     protected float mAlpha = 1.0f;
     protected float mPivotX = 0.0f;
@@ -29,30 +30,35 @@ public class ViewPropertyAnimation extends Animation {
     protected float mCameraZ = -8.0f;
 
     private float mFromAlpha = -1.0f;
-    private float mToAlpha   = -1.0f;
+    private float mToAlpha = -1.0f;
 
-    public ViewPropertyAnimation fading(@FloatRange(from=0.0f,to=1.0f) float fromAlpha, @FloatRange(from=0.0f,to=1.0f) float toAlpha) {
+    public ViewPropertyAnimation fading(@FloatRange (from = 0.0f, to = 1.0f) float fromAlpha, @FloatRange (from = 0.0f, to = 1.0f) float toAlpha)
+    {
         mFromAlpha = fromAlpha;
         mToAlpha = toAlpha;
         return this;
     }
 
     @Override
-    public void initialize(int width, int height, int parentWidth, int parentHeight) {
+    public void initialize(int width, int height, int parentWidth, int parentHeight)
+    {
         super.initialize(width, height, parentWidth, parentHeight);
         mWidth = width;
         mHeight = height;
     }
 
     @Override
-    protected void applyTransformation(float interpolatedTime, Transformation t) {
+    protected void applyTransformation(float interpolatedTime, Transformation t)
+    {
         super.applyTransformation(interpolatedTime, t);
-        if (mFromAlpha >= 0 && mToAlpha >= 0) {
+        if (mFromAlpha >= 0 && mToAlpha >= 0)
+        {
             mAlpha = mFromAlpha + (mToAlpha - mFromAlpha) * interpolatedTime;
         }
     }
 
-    protected void applyTransformation(Transformation t) {
+    protected void applyTransformation(Transformation t)
+    {
         final Matrix m = t.getMatrix();
         final float w = mWidth;
         final float h = mHeight;
@@ -62,13 +68,16 @@ public class ViewPropertyAnimation extends Animation {
         final float rX = mRotationX;
         final float rY = mRotationY;
         final float rZ = mRotationZ;
-        if ((rX != 0) || (rY != 0) || (rZ != 0)) {
+        if ((rX != 0) || (rY != 0) || (rZ != 0))
+        {
             final Camera camera = mCamera;
             camera.save();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1)
+            {
                 camera.setLocation(mCameraX, mCameraY, mCameraZ);
             }
-            if (mTranslationZ != 0) {
+            if (mTranslationZ != 0)
+            {
                 camera.translate(0, 0, mTranslationZ);
             }
             camera.rotateX(rX);
@@ -82,7 +91,8 @@ public class ViewPropertyAnimation extends Animation {
 
         final float sX = mScaleX;
         final float sY = mScaleY;
-        if ((sX != 1.0f) || (sY != 1.0f)) {
+        if ((sX != 1.0f) || (sY != 1.0f))
+        {
             m.postScale(sX, sY);
             final float sPX = -(pX / w) * ((sX * w) - w);
             final float sPY = -(pY / h) * ((sY * h) - h);
@@ -93,5 +103,4 @@ public class ViewPropertyAnimation extends Animation {
 
         t.setAlpha(mAlpha);
     }
-
 }
